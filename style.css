@@ -190,12 +190,12 @@ body {
   position: absolute;
   top: 40px;
   right: 0;
-  width: 240px;
+  width: 200px;
   max-height: 0;
   overflow: hidden;
-  background: #000;
-  border: 1px solid #fff;
-  border-radius: 0;
+  background: #0d0d0d;
+  border: 1px solid #222;
+  border-radius: 4px;
   transform-origin: top center;
   visibility: hidden;
   opacity: 0;
@@ -283,42 +283,28 @@ body {
   height: 100vh;
   display: flex;
   justify-content: center;
-  align-items: flex-start;
+  align-items: center;
   padding: 0 20px;
   position: relative;
   z-index: 5;
-  overflow-y: auto;
-  overflow-x: hidden;
-}
-
-.main-content::-webkit-scrollbar {
-  width: 6px;
-}
-
-.main-content::-webkit-scrollbar-track {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-.main-content::-webkit-scrollbar-thumb {
-  background: #ffffff;
 }
 
 .tab-pane {
   display: none;
   width: 100%;
   max-width: 420px;
-  max-height: none;
-  overflow-y: visible;
-  padding-right: 0;
-  padding-top: 80px;
+  max-height: 85vh;
+  overflow-y: auto;
+  padding-right: 6px;
+  padding-top: 40px;
   padding-bottom: 50px;
 }
 
 @media (orientation: landscape) {
   .tab-pane {
     max-width: 760px;
-    max-height: none;
-    padding-top: 70px;
+    max-height: 75vh;
+    padding-top: 30px;
     padding-bottom: 50px;
   }
 }
@@ -410,16 +396,6 @@ body {
   transform: rotate(45deg);
 }
 
-/* Spin Wheel Gear Icon - Horizontal Mode: Move to Left Top Inside Card */
-@media (orientation: landscape) {
-  #mode-card-spin .card-gear-icon-only {
-    right: auto;
-    left: 24px;
-    top: 24px;
-  }
-}
-
-
 /* Hyperlinks and Buttons */
 .space-link {
   color: #fff;
@@ -508,10 +484,6 @@ body {
 }
 
 .custom-select-wrapper {
-  overflow: visible;
-
-  overflow: visible;
-
   position: relative;
   width: 100%;
 }
@@ -1026,211 +998,98 @@ body {
   text-transform: uppercase;
 }
 
-/* Title Clear Row - 2 Buttons Shared 50/50 Above Title Input */
-.title-clear-row {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 12px;
-  width: 100%;
-}
-
-.small-clear-btn {
-  flex: 1;
-  padding: 8px 6px;
-  font-size: 11px;
-  letter-spacing: 1px;
-}
-
-/* Spin Wheel Gear Icon - Horizontal Mode: Move to Left Top Inside Card */
-@media (orientation: landscape) {
-  #mode-card-spin .card-gear-icon-only {
-    right: auto !important;
-    left: 24px !important;
-    top: 24px !important;
-  }
-}
-
-
-
-/* Custom Dropdown - Not Browser Native, White Corner, No Smooth Stroke */
-.custom-dropdown {
-  position: relative;
-  width: 100%;
-  z-index: 10;
-  isolation: isolate;
-}
-
-.custom-dropdown.open {
-  z-index: 200;
-}
-
-.custom-dropdown-trigger {
-  width: 100%;
-  background: #000;
-  color: #fff;
-  border: 1px solid #fff;
-  border-radius: 0;
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-family: 'Space Grotesk', monospace, sans-serif;
-  outline: none;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  text-align: left;
-  transition: none;
-  position: relative;
-  z-index: 1;
-}
-
-.custom-dropdown-arrow {
-  font-size: 10px;
-  transition: transform 0.2s ease;
-}
-
-.custom-dropdown.open .custom-dropdown-arrow {
-  transform: rotate(180deg);
-}
-
-.custom-dropdown-options {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: #000;
-  border: 1px solid #fff;
-  border-top: none;
-  border-radius: 0;
-  z-index: 201;
-  display: flex;
-  flex-direction: column;
-  box-shadow: 0 8px 20px rgba(0,0,0,0.9);
-  max-height: 0;
-  overflow: hidden;
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-12px);
-  transform-origin: top center;
-  transition: max-height 0.4s cubic-bezier(0.77, 0, 0.175, 1), opacity 0.3s ease, visibility 0.4s ease, transform 0.4s cubic-bezier(0.25, 1, 0.5, 1), box-shadow 0.3s ease;
-}
-
-.custom-dropdown.open .custom-dropdown-options {
-  max-height: 260px;
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.05);
-}
-
-.custom-dropdown-option {
-  padding: 12px 16px;
-  font-size: 14px;
-  font-weight: 700;
-  letter-spacing: 1.5px;
-  text-transform: uppercase;
-  font-family: 'Space Grotesk', monospace, sans-serif;
-  color: #fff;
-  background: #000;
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-  text-align: left;
-  transition: none;
-  border-bottom: 1px solid #222;
-}
-
-.custom-dropdown-option:last-child {
-  border-bottom: none;
-}
-
-.custom-dropdown-option:hover,
-.custom-dropdown-option.focused {
-  background: #fff;
-  color: #000;
-}
-
-.custom-dropdown-option.active {
-  background: #fff;
-  color: #000;
-}
-
-/* Dropdown Tab Garis 3 - Slightly Enlarged for PC/Laptop Horizontal */
-@media (orientation: landscape) and (min-width: 768px),
-       (hover: hover) and (pointer: fine) and (orientation: landscape) {
+/* Dropdown Tab Garis 3 - Enlarged for PC/Laptop in Horizontal Mode */
+@media (orientation: landscape) and (min-width: 768px), 
+       (orientation: landscape) and (hover: hover) and (pointer: fine) {
+  /* Hamburger Icon Enlarged */
   .hamburger {
-    width: 36px;
-    height: 28px;
+    width: 40px;
+    height: 30px;
   }
 
   .line {
-    height: 2.5px;
+    height: 3px;
   }
 
   .hamburger.open .line-1 {
-    transform: translateY(12px) rotate(-45deg);
+    transform: translateY(13px) rotate(-45deg);
   }
 
   .hamburger.open .line-3 {
-    transform: translateY(-12px) rotate(45deg);
+    transform: translateY(-13px) rotate(45deg);
   }
 
+  /* Dropdown Panel Enlarged */
   .dropdown-scroll {
-    width: 280px;
-    top: 46px;
+    width: 320px;
+    border-radius: 0;
+    border: 1px solid #fff;
   }
 
   .dropdown-scroll.open {
-    max-height: 400px;
-    box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9), 0 0 15px rgba(255, 255, 255, 0.06);
+    max-height: 480px;
+    box-shadow: 0 15px 40px rgba(0, 0, 0, 0.9), 0 0 20px rgba(255, 255, 255, 0.08);
   }
 
   .scroll-content {
-    padding: 20px;
+    padding: 24px;
   }
 
   .nav-tabs {
-    gap: 14px;
+    gap: 16px;
   }
 
   .tab-link {
-    font-size: 15px;
-    gap: 12px;
+    font-size: 16px;
+    gap: 14px;
+    letter-spacing: 1.5px;
+    padding: 6px 0;
   }
 
   .tab-link i {
-    width: 18px;
-    height: 18px;
+    width: 20px;
+    height: 20px;
+  }
+
+  .tab-divider {
+    margin: 6px 0;
+    height: 1px;
+    background: #333;
+  }
+
+  .menu-container {
+    top: 28px;
+    right: 32px;
   }
 }
 
-
-
-.custom-dropdown.open .custom-dropdown-option {
-  animation: dropdownOptionSlideDown 0.35s cubic-bezier(0.25, 1, 0.5, 1) forwards;
-  opacity: 0;
-  transform: translateY(-8px);
-}
-
-.custom-dropdown.open .custom-dropdown-option:nth-child(1) { animation-delay: 0.05s; }
-.custom-dropdown.open .custom-dropdown-option:nth-child(2) { animation-delay: 0.1s; }
-
-@keyframes dropdownOptionSlideDown {
-  0% {
-    opacity: 0;
-    transform: translateY(-8px);
+/* Extra Large for Desktop Full HD Horizontal */
+@media (orientation: landscape) and (min-width: 1280px) and (hover: hover) and (pointer: fine) {
+  .dropdown-scroll {
+    width: 360px;
   }
-  100% {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
 
-.custom-dropdown:not(.open) .custom-dropdown-option {
-  animation: none;
-  opacity: 1;
+  .dropdown-scroll.open {
+    max-height: 520px;
+  }
+
+  .scroll-content {
+    padding: 28px;
+  }
+
+  .tab-link {
+    font-size: 17px;
+    gap: 16px;
+  }
+
+  .tab-link i {
+    width: 22px;
+    height: 22px;
+  }
+
+  .hamburger {
+    width: 44px;
+    height: 32px;
+  }
 }
 
