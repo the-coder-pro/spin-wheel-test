@@ -1491,16 +1491,24 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================================================================
   // === EDITABLE MUSIC TOGGLE - TARO DI PALING BAWAH BIAR GAMPANG EDIT ===
   // ========================================================================
-  // GANTI src DI BAWAH INI DENGAN FILE MUSIC KAMU NANTI
-  // Contoh: "music.mp3", "/assets/bgm.mp3", "https://.../song.mp3"
+  // FILE MUSIC ADA DI DALAM FOLDER AUDIO
+  // audio/music.mp3 = background music
+  // audio/click.mp3 = sound tiap klik button/checkbox
   // ========================================================================
   const MUSIC_CONFIG = {
-    src: "music.mp3", // <--- GANTI FILE DI SINI NANTI
+    src: "audio/music.mp3", // <--- FILE BACKGROUND MUSIC
     volume: 0.5, // 0.0 - 1.0
     loop: true
   };
 
+  const CLICK_CONFIG = {
+    src: "audio/click.mp3", // <--- FILE CLICK SOUND
+    volume: 0.7
+  };
+
   let bgMusic = null;
+  let fadeInterval = null;
+  let clickAudioPool = [];
 
   function initBackgroundMusic() {
     if (bgMusic) return bgMusic;
@@ -1511,51 +1519,153 @@ document.addEventListener("DOMContentLoaded", () => {
     return bgMusic;
   }
 
-  const checkboxMusic = document.getElementById("checkbox-music");
-  if (checkboxMusic) {
-    // Auto-play attempt if checked by default (browsers may block until user interaction)
-    if (checkboxMusic.checked) {
-      const tryPlay = () => {
-        const music = initBackgroundMusic();
-        music.play().catch(() => {
-          // Browser blocked autoplay, will play after user interaction
-        });
-      };
-      // Try after short delay
-      setTimeout(tryPlay, 500);
-      // Also play on first user click anywhere
-      const firstInteractionPlay = () => {
-        if (checkboxMusic.checked && bgMusic && bgMusic.paused) {
-          bgMusic.play().catch(()=>{});
-        }
-        document.removeEventListener("click", firstInteractionPlay);
-        document.removeEventListener("keydown", firstInteractionPlay);
-      };
-      document.addEventListener("click", firstInteractionPlay);
-      document.addEventListener("keydown", firstInteractionPlay);
-    }
+  // Play click.mp3 tiap klik button / checkbox
+  function playClickSound() {
+    try {
+      const audio = new Audio(CLICK_CONFIG.src);
+      audio.volume = CLICK_CONFIG.volume;
+      audio.play().catch(()=>{});
+    } catch(e) {}
+  }
 
+  // Fade out volume pelan-pelan sampai 0 baru pause
+  function fadeOutAndPause(audio, duration = 800) {
+    if (!audio) return;
+    clearInterval(fadeInterval);
+    const steps = 20;
+    const stepTime = duration / steps;
+    const volumeStep = audio.volume / steps;
+
+    fadeInterval = setInterval(() => {
+      if (audio.volume > volumeStep) {
+        audio.volume = Math.max(0, audio.volume - volumeStep);
+      } else {
+        audio.volume = 0;
+        audio.pause();
+        clearInterval(fadeInterval);
+        // Reset volume ke config untuk play berikutnya
+        audio.volume = MUSIC_CONFIG.volume;
+      }
+    }, stepTime);
+  }
+
+  function fadeInAndPlay(audio, duration = 500) {
+    if (!audio) return;
+    clearInterval(fadeInterval);
+    audio.volume = 0;
+    audio.play().catch(()=>{}).then(() => {
+      const steps = 20;
+      const stepTime = duration / steps;
+      const targetVol = MUSIC_CONFIG.volume;
+      const volumeStep = targetVol / steps;
+      let currentStep = 0;
+      fadeInterval = setInterval(() => {
+        currentStep++;
+        if (currentStep >= steps) {
+          audio.volume = targetVol;
+          clearInterval(fadeInterval);
+        } else {
+          audio.volume = Math.min(targetVol, audio.volume + volumeStep);
+        }
+      }, stepTime);
+    }).catch(()=>{});
+  }
+
+  // === 1. AUTO EXECUTE music.mp3 LANGSUNG SAAT AWAL BUKA WEB ===
+  const checkboxMusic = document.getElementById("checkbox-music");
+  // Init music langsung
+  const music = initBackgroundMusic();
+  // Coba auto play langsung saat load
+  if (checkboxMusic && checkboxMusic.checked) {
+    // Attempt autoplay immediately
+    music.play().catch(() => {
+      console.log("Autoplay blocked, waiting for user interaction");
+    });
+  }
+
+  // Backup: play on first user interaction if autoplay blocked
+  const firstInteractionPlay = () => {
+    if (checkboxMusic && checkboxMusic.checked && bgMusic && bgMusic.paused) {
+      // Kalau masih 0 volume karena fade out sebelumnya, reset dulu
+      bgMusic.volume = MUSIC_CONFIG.volume;
+      bgMusic.play().catch(()=>{});
+    }
+    document.removeEventListener("click", firstInteractionPlay);
+    document.removeEventListener("keydown", firstInteractionPlay);
+    document.removeEventListener("touchstart", firstInteractionPlay);
+  };
+  document.addEventListener("click", firstInteractionPlay);
+  document.addEventListener("keydown", firstInteractionPlay);
+  document.addEventListener("touchstart", firstInteractionPlay);
+
+  // === 2. CHECKBOX ENABLE MUSIC - FADE OUT PELAN KE 0 BARU PAUSE ===
+  if (checkboxMusic) {
     checkboxMusic.addEventListener("change", (e) => {
       const isChecked = e.target.checked;
       const music = initBackgroundMusic();
+      clearInterval(fadeInterval);
       if (isChecked) {
-        music.play().catch((err) => {
-          console.log("Music play blocked:", err);
-        });
+        // Fade in play
+        if (music.paused) {
+          music.volume = 0;
+          music.play().catch((err) => {
+            console.log("Music play blocked:", err);
+          }).then(() => {
+            fadeInAndPlay(music, 600);
+          });
+        } else {
+          fadeInAndPlay(music, 400);
+        }
       } else {
-        music.pause();
+        // Fade out pelan sampai 0 baru pause
+        if (!music.paused) {
+          fadeOutAndPause(music, 800);
+        }
       }
     });
   }
 
-  // Optional: pause music when tab hidden, resume when visible (if checkbox still checked)
+  // === 3. BUTTON & CHECKBOX CLICK -> PLAY audio/click.mp3 ===
+  function setupClickSounds() {
+    // Semua button
+    const allButtons = document.querySelectorAll("button");
+    allButtons.forEach(btn => {
+      // Jangan double listener untuk checkbox-music biar tidak bentrok
+      if (btn.id === "checkbox-music") return;
+      btn.addEventListener("click", () => {
+        playClickSound();
+      });
+    });
+
+    // Semua checkbox
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    allCheckboxes.forEach(chk => {
+      chk.addEventListener("click", () => {
+        playClickSound();
+      });
+    });
+  }
+
+  // Setup click sounds setelah DOM ready
+  setupClickSounds();
+
+  // Observer untuk button yang dibuat dinamis (seperti group cards, percentage modal)
+  const observer = new MutationObserver(() => {
+    setupClickSounds();
+  });
+  observer.observe(document.body, { childList: true, subtree: true });
+
+  // Pause music saat tab hidden, resume saat visible (jika checkbox masih checked)
   document.addEventListener("visibilitychange", () => {
     if (!checkboxMusic) return;
     if (!bgMusic) return;
     if (document.hidden) {
-      bgMusic.pause();
+      if (!bgMusic.paused) {
+        bgMusic.pause();
+      }
     } else {
-      if (checkboxMusic.checked) {
+      if (checkboxMusic.checked && bgMusic.paused) {
+        bgMusic.volume = MUSIC_CONFIG.volume;
         bgMusic.play().catch(()=>{});
       }
     }
