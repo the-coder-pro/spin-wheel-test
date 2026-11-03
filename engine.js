@@ -1502,7 +1502,7 @@ document.addEventListener("DOMContentLoaded", () => {
   };
 
   const CLICK_CONFIG = {
-    src: "audio/click.mp3", // <--- FILE CLICK SOUND
+    src: "audio/click.wav", // <--- FILE CLICK SOUND
     volume: 0.7
   };
 
