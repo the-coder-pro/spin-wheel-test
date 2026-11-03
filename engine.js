@@ -136,6 +136,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "btn-group-action": "GIVE GROUP",
       "setting-title": "System Configuration",
       "setting-star-label": "Aktifkan Bintang Jatuh",
+      "setting-music-label": "Aktifkan Music",
       "setting-lang-label": "BAHASA / LANGUAGE",
       "github-card-title": "Open Source Project",
       "github-card-desc": "Proyek ini bersifat open source. Anda dapat melihat, mempelajari, atau berkontribusi pada kode sumber melalui repositori GitHub kami di bawah ini:",
@@ -185,6 +186,7 @@ document.addEventListener("DOMContentLoaded", () => {
       "btn-group-action": "GIVE GROUP",
       "setting-title": "System Configuration",
       "setting-star-label": "Enable Shooting Stars",
+      "setting-music-label": "Enable Music",
       "setting-lang-label": "LANGUAGE / BAHASA",
       "github-card-title": "Open Source Project",
       "github-card-desc": "This project is open source. You can view, learn from, or contribute to the source code through our GitHub repository below:",
@@ -1484,4 +1486,80 @@ document.addEventListener("DOMContentLoaded", () => {
   if (typeof lucide !== "undefined" && lucide.createIcons) {
     lucide.createIcons();
   }
+
+
+  // ========================================================================
+  // === EDITABLE MUSIC TOGGLE - TARO DI PALING BAWAH BIAR GAMPANG EDIT ===
+  // ========================================================================
+  // GANTI src DI BAWAH INI DENGAN FILE MUSIC KAMU NANTI
+  // Contoh: "music.mp3", "/assets/bgm.mp3", "https://.../song.mp3"
+  // ========================================================================
+  const MUSIC_CONFIG = {
+    src: "music.mp3", // <--- GANTI FILE DI SINI NANTI
+    volume: 0.5, // 0.0 - 1.0
+    loop: true
+  };
+
+  let bgMusic = null;
+
+  function initBackgroundMusic() {
+    if (bgMusic) return bgMusic;
+    bgMusic = new Audio(MUSIC_CONFIG.src);
+    bgMusic.loop = MUSIC_CONFIG.loop;
+    bgMusic.volume = MUSIC_CONFIG.volume;
+    bgMusic.preload = "auto";
+    return bgMusic;
+  }
+
+  const checkboxMusic = document.getElementById("checkbox-music");
+  if (checkboxMusic) {
+    // Auto-play attempt if checked by default (browsers may block until user interaction)
+    if (checkboxMusic.checked) {
+      const tryPlay = () => {
+        const music = initBackgroundMusic();
+        music.play().catch(() => {
+          // Browser blocked autoplay, will play after user interaction
+        });
+      };
+      // Try after short delay
+      setTimeout(tryPlay, 500);
+      // Also play on first user click anywhere
+      const firstInteractionPlay = () => {
+        if (checkboxMusic.checked && bgMusic && bgMusic.paused) {
+          bgMusic.play().catch(()=>{});
+        }
+        document.removeEventListener("click", firstInteractionPlay);
+        document.removeEventListener("keydown", firstInteractionPlay);
+      };
+      document.addEventListener("click", firstInteractionPlay);
+      document.addEventListener("keydown", firstInteractionPlay);
+    }
+
+    checkboxMusic.addEventListener("change", (e) => {
+      const isChecked = e.target.checked;
+      const music = initBackgroundMusic();
+      if (isChecked) {
+        music.play().catch((err) => {
+          console.log("Music play blocked:", err);
+        });
+      } else {
+        music.pause();
+      }
+    });
+  }
+
+  // Optional: pause music when tab hidden, resume when visible (if checkbox still checked)
+  document.addEventListener("visibilitychange", () => {
+    if (!checkboxMusic) return;
+    if (!bgMusic) return;
+    if (document.hidden) {
+      bgMusic.pause();
+    } else {
+      if (checkboxMusic.checked) {
+        bgMusic.play().catch(()=>{});
+      }
+    }
+  });
+  // === END EDITABLE MUSIC TOGGLE ===
+
 });
