@@ -125,21 +125,19 @@ document.addEventListener("DOMContentLoaded", () => {
       "opt-spin": "spin wheel",
       "opt-group": "give group",
       "opt-dice": "number dice",
-      "opt-dice": "number dice",
       "spinning-text": "SPINNING...",
       "placeholder-wheel-label": "judul spin wheel",
       "placeholder-wheel-items": "test 1\ntest 2",
       "btn-spin-action": "SPIN WHEEL",
       "btn-dice-start": "START ROLL",
-      "dice-setting-title": "DICE SETTINGS",
-      "dice-max-label": "MAX NUMBER",
-      "dice-max-desc": "1 to max, e.g. 20 = 1-20",
-      "dice-blacklist-label": "Blacklist yang sudah terpilih",
-      "dice-blacklist-desc": "Jika aktif, angka yang sudah keluar tidak akan keluar lagi",
-      "btn-dice-start": "START ROLL",
       "dice-setting-title": "PENGATURAN DICE",
       "dice-max-label": "ANGKA MAKSIMUM",
-      "dice-max-desc": "1 sampai max, contoh 6 = 1-6",
+      "dice-max-desc": "1 sampai max, contoh 20 = 1-20",
+      "dice-blacklist-label": "Blacklist yang sudah terpilih",
+      "dice-blacklist-desc": "Jika aktif, angka yang sudah keluar tidak akan keluar lagi",
+      "dice-blacklist-output-label": "Angka Blacklist:",
+      "dice-blacklist-empty": "Tidak ada",
+      "dice-blacklist-output-label-full": "Angka yang di Blacklist",
       "group-input-title": "GIVE GROUP INPUT",
       "trigger-label": "NAMA JUDUL",
       "placeholder-trigger": "Masukkan nama judul...",
@@ -186,10 +184,20 @@ document.addEventListener("DOMContentLoaded", () => {
       "mode-select-label": "SPIN WHEEL MODE",
       "opt-spin": "spin wheel",
       "opt-group": "give group",
+      "opt-dice": "number dice",
       "spinning-text": "SPINNING...",
       "placeholder-wheel-label": "spin wheel title",
       "placeholder-wheel-items": "test 1\ntest 2",
       "btn-spin-action": "SPIN WHEEL",
+      "btn-dice-start": "START ROLL",
+      "dice-setting-title": "DICE SETTINGS",
+      "dice-max-label": "MAX NUMBER",
+      "dice-max-desc": "1 to max, e.g. 20 = 1-20",
+      "dice-blacklist-label": "Blacklist selected numbers",
+      "dice-blacklist-desc": "If active, rolled numbers won't appear again",
+      "dice-blacklist-output-label": "Blacklisted Numbers:",
+      "dice-blacklist-empty": "None",
+      "dice-blacklist-output-label-full": "Blacklisted Numbers",
       "group-input-title": "GIVE GROUP INPUT",
       "trigger-label": "TITLE NAME",
       "placeholder-trigger": "Enter title name...",
@@ -407,6 +415,8 @@ document.addEventListener("DOMContentLoaded", () => {
   const inputDiceMax = document.getElementById("input-dice-max");
   const checkboxDiceBlacklist = document.getElementById("checkbox-dice-blacklist");
   const btnResetDice = document.getElementById("btn-reset-dice");
+  const diceBlacklistOutput = document.getElementById("dice-blacklist-output");
+  const diceBlacklistList = document.getElementById("dice-blacklist-list");
 
   // Dice State - MAX 20 + BLACKLIST
   let diceMax = 20;
@@ -1807,8 +1817,27 @@ document.addEventListener("DOMContentLoaded", () => {
     } else {
       btnResetDice.style.display = "none";
     }
+    updateDiceBlacklistDisplay();
     if (typeof lucide !== "undefined" && lucide.createIcons) {
       lucide.createIcons();
+    }
+  }
+
+  function updateDiceBlacklistDisplay() {
+    if (!diceBlacklistList) return;
+    const dict = translations[currentLang] || translations['en'];
+    if (!diceBlacklistEnabled) {
+      diceBlacklistList.textContent = dict['dice-blacklist-empty'] || "None";
+      diceBlacklistList.className = "dice-blacklist-list empty";
+      return;
+    }
+    if (diceBlacklist.size === 0) {
+      diceBlacklistList.textContent = dict['dice-blacklist-empty'] || "None";
+      diceBlacklistList.className = "dice-blacklist-list empty";
+    } else {
+      const sorted = Array.from(diceBlacklist).sort((a,b)=>a-b);
+      diceBlacklistList.textContent = sorted.join(", ");
+      diceBlacklistList.className = "dice-blacklist-list has-data";
     }
   }
 
