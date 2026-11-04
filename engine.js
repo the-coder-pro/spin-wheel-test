@@ -124,10 +124,20 @@ document.addEventListener("DOMContentLoaded", () => {
       "mode-select-label": "MODE SPIN WHEEL",
       "opt-spin": "spin wheel",
       "opt-group": "give group",
+      "opt-dice": "number dice",
+      "opt-dice": "number dice",
       "spinning-text": "SPINNING...",
       "placeholder-wheel-label": "judul spin wheel",
       "placeholder-wheel-items": "test 1\ntest 2",
       "btn-spin-action": "SPIN WHEEL",
+      "btn-dice-start": "START ROLL",
+      "dice-setting-title": "DICE SETTINGS",
+      "dice-max-label": "MAX NUMBER",
+      "dice-max-desc": "1 to max, e.g. 6 = 1-6",
+      "btn-dice-start": "START ROLL",
+      "dice-setting-title": "PENGATURAN DICE",
+      "dice-max-label": "ANGKA MAKSIMUM",
+      "dice-max-desc": "1 sampai max, contoh 6 = 1-6",
       "group-input-title": "GIVE GROUP INPUT",
       "trigger-label": "NAMA JUDUL",
       "placeholder-trigger": "Masukkan nama judul...",
@@ -383,6 +393,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const modeSelect = document.getElementById("mode-select");
   const modeCardSpin = document.getElementById("mode-card-spin");
   const modeCardGroupContainer = document.getElementById("mode-card-group-container");
+  const modeCardDice = document.getElementById("mode-card-number-dice");
+
+  // Number Dice Elements
+  const diceBox = document.getElementById("dice-box");
+  const diceNumberDisplay = document.getElementById("dice-number-display");
+  const btnDiceRoll = document.getElementById("btn-dice-roll");
+  const btnDiceGear = document.getElementById("btn-dice-gear");
+  const diceSettingModal = document.getElementById("dice-setting-modal");
+  const btnDiceSettingClose = document.getElementById("btn-dice-setting-close");
+  const inputDiceMax = document.getElementById("input-dice-max");
+
+  // Dice State
+  let diceMax = 6;
+  let diceCurrent = 1;
+  let diceIdleInterval = null;
+  let diceFastInterval = null;
+  let diceIsRolling = false;
 
   // Spin Wheel Canvas & Input Elements
   const canvas = document.getElementById("wheel-canvas");
@@ -515,12 +542,22 @@ document.addEventListener("DOMContentLoaded", () => {
   if (modeSelect && modeCardSpin && modeCardGroupContainer) {
     modeSelect.addEventListener("change", (e) => {
       const target = e.target;
+      const modeCardDice = document.getElementById("mode-card-number-dice");
       if (target.value === "spin-wheel") {
         modeCardSpin.style.display = "block";
         modeCardGroupContainer.style.display = "none";
-      } else {
+        if (modeCardDice) modeCardDice.style.display = "none";
+        stopDiceIdle();
+      } else if (target.value === "give-group") {
         modeCardSpin.style.display = "none";
         modeCardGroupContainer.style.display = "flex";
+        if (modeCardDice) modeCardDice.style.display = "none";
+        stopDiceIdle();
+      } else if (target.value === "number-dice") {
+        modeCardSpin.style.display = "none";
+        modeCardGroupContainer.style.display = "none";
+        if (modeCardDice) modeCardDice.style.display = "block";
+        startDiceIdle();
       }
       updateScrollBounds();
     });
@@ -1487,8 +1524,9 @@ document.addEventListener("DOMContentLoaded", () => {
   // === EDITABLE MUSIC TOGGLE - TARO DI PALING BAWAH BIAR GAMPANG EDIT ===
   // ========================================================================
   // FILE MUSIC ADA DI DALAM FOLDER AUDIO
-  // audio/music.mp3 = background music (AUTO EXECUTE SAAT MASUK WEB)
-  // audio/click.wav = sound tiap klik button/checkbox (FIXED SINGLE SOUND - wav bukan mp3)
+  // audio/music.mp3 = background music (AUTO EXECUTE FIXED)
+  // audio/click.wav = sound tiap klik button/checkbox (FIXED SINGLE SOUND)
+  // FIX: muted autoplay untuk bypass browser block, lalu unmute
   // ========================================================================
   const MUSIC_CONFIG = {
     src: "audio/music.mp3",
@@ -1511,6 +1549,7 @@ document.addEventListener("DOMContentLoaded", () => {
     bgMusic.loop = MUSIC_CONFIG.loop;
     bgMusic.volume = MUSIC_CONFIG.volume;
     bgMusic.preload = "auto";
+    bgMusic.muted = false;
     return bgMusic;
   }
 
@@ -1565,38 +1604,70 @@ document.addEventListener("DOMContentLoaded", () => {
     }).catch(()=>{});
   }
 
+  // === FIXED AUTO EXECUTE music.mp3 - MUTED AUTOPLAY TRICK ===
   const checkboxMusic = document.getElementById("checkbox-music");
   
   function autoPlayMusic() {
     const m = initBackgroundMusic();
     if (checkboxMusic && checkboxMusic.checked) {
+      m.muted = false;
       m.volume = MUSIC_CONFIG.volume;
       const p = m.play();
       if (p !== undefined) {
-        p.then(() => console.log("Music auto-play success"))
-         .catch(() => console.log("Autoplay blocked, waiting interaction"));
+        p.then(() => {
+          console.log("Music auto-play success");
+        }).catch(() => {
+          console.log("Autoplay blocked, trying muted autoplay");
+          // Try muted autoplay then unmute on interaction
+          m.muted = true;
+          m.play().then(() => {
+            console.log("Muted autoplay success, waiting for interaction to unmute");
+            const unmuteOnInteraction = () => {
+              m.muted = false;
+              m.volume = MUSIC_CONFIG.volume;
+              document.removeEventListener("click", unmuteOnInteraction);
+              document.removeEventListener("keydown", unmuteOnInteraction);
+              document.removeEventListener("touchstart", unmuteOnInteraction);
+            };
+            document.addEventListener("click", unmuteOnInteraction);
+            document.addEventListener("keydown", unmuteOnInteraction);
+            document.addEventListener("touchstart", unmuteOnInteraction);
+          }).catch(()=>{});
+        });
       }
     }
   }
 
+  // Attempt immediate
   autoPlayMusic();
   setTimeout(autoPlayMusic, 300);
-  window.addEventListener("load", () => setTimeout(autoPlayMusic, 200));
+  setTimeout(autoPlayMusic, 1000);
+  window.addEventListener("load", () => {
+    setTimeout(autoPlayMusic, 200);
+    setTimeout(autoPlayMusic, 800);
+  });
+  document.addEventListener("DOMContentLoaded", () => {
+    setTimeout(autoPlayMusic, 100);
+  });
 
   const firstInteractionPlay = () => {
-    if (checkboxMusic && checkboxMusic.checked && bgMusic && bgMusic.paused) {
-      bgMusic.volume = MUSIC_CONFIG.volume;
-      bgMusic.play().catch(()=>{});
+    if (checkboxMusic && checkboxMusic.checked && bgMusic) {
+      if (bgMusic.paused) {
+        bgMusic.muted = false;
+        bgMusic.volume = MUSIC_CONFIG.volume;
+        bgMusic.play().catch(()=>{});
+      } else if (bgMusic.muted) {
+        bgMusic.muted = false;
+        bgMusic.volume = MUSIC_CONFIG.volume;
+      }
     }
-    document.removeEventListener("click", firstInteractionPlay);
-    document.removeEventListener("keydown", firstInteractionPlay);
-    document.removeEventListener("touchstart", firstInteractionPlay);
-    document.removeEventListener("mousemove", firstInteractionPlay);
   };
   document.addEventListener("click", firstInteractionPlay);
   document.addEventListener("keydown", firstInteractionPlay);
   document.addEventListener("touchstart", firstInteractionPlay);
-  document.addEventListener("mousemove", firstInteractionPlay, { once: true });
+  document.addEventListener("mousemove", () => {
+    firstInteractionPlay();
+  }, { once: true });
 
   if (checkboxMusic) {
     checkboxMusic.addEventListener("change", (e) => {
@@ -1604,6 +1675,7 @@ document.addEventListener("DOMContentLoaded", () => {
       const music = initBackgroundMusic();
       clearInterval(fadeInterval);
       if (isChecked) {
+        music.muted = false;
         if (music.paused) {
           music.volume = 0;
           music.play().catch(()=>{}).then(() => {
@@ -1642,12 +1714,177 @@ document.addEventListener("DOMContentLoaded", () => {
       if (!bgMusic.paused) bgMusic.pause();
     } else {
       if (checkboxMusic.checked && bgMusic.paused) {
+        bgMusic.muted = false;
         bgMusic.volume = MUSIC_CONFIG.volume;
         bgMusic.play().catch(()=>{});
       }
     }
   });
   // === END EDITABLE MUSIC TOGGLE ===
+
+  // ========================================================================
+  // === NUMBER DICE SYSTEM ===
+  // ========================================================================
+  // Idle: 1 -> max -> 1 loop dengan kecepatan 0.5 detik per angka
+  // Roll: 1 -> max loop dengan kecepatan 0.05 detik per angka (sangat cepat), stop instan
+  // ========================================================================
+
+  function updateDiceDisplay(num) {
+    if (diceNumberDisplay) {
+      diceNumberDisplay.textContent = num;
+    }
+  }
+
+  function startDiceIdle() {
+    stopDiceIdle();
+    if (!diceNumberDisplay) return;
+    if (diceIsRolling) return;
+    diceCurrent = 1;
+    updateDiceDisplay(diceCurrent);
+    diceIdleInterval = setInterval(() => {
+      diceCurrent++;
+      if (diceCurrent > diceMax) diceCurrent = 1;
+      updateDiceDisplay(diceCurrent);
+    }, 500);
+  }
+
+  function stopDiceIdle() {
+    if (diceIdleInterval) {
+      clearInterval(diceIdleInterval);
+      diceIdleInterval = null;
+    }
+  }
+
+  function startDiceFastRoll() {
+    if (diceIsRolling) return;
+    if (!diceNumberDisplay || !diceBox || !btnDiceRoll) return;
+    
+    diceIsRolling = true;
+    stopDiceIdle();
+    btnDiceRoll.disabled = true;
+    btnDiceRoll.textContent = "ROLLING...";
+    diceBox.classList.add("rolling");
+    diceBox.classList.remove("result-flash");
+
+    let fastCurrent = diceCurrent;
+
+    diceFastInterval = setInterval(() => {
+      fastCurrent++;
+      if (fastCurrent > diceMax) fastCurrent = 1;
+      updateDiceDisplay(fastCurrent);
+      diceCurrent = fastCurrent;
+    }, 50);
+
+    const rollDuration = 2000 + Math.random() * 1000;
+
+    setTimeout(() => {
+      clearInterval(diceFastInterval);
+      diceFastInterval = null;
+      
+      const finalNumber = Math.floor(Math.random() * diceMax) + 1;
+      diceCurrent = finalNumber;
+      updateDiceDisplay(finalNumber);
+      
+      diceBox.classList.remove("rolling");
+      diceBox.classList.add("result-flash");
+      
+      setTimeout(() => {
+        diceBox.classList.remove("result-flash");
+      }, 500);
+
+      diceIsRolling = false;
+      btnDiceRoll.disabled = false;
+      const dict = translations[currentLang] || translations['en'];
+      btnDiceRoll.textContent = dict['btn-dice-start'] || "START ROLL";
+
+      // Show result modal
+      if (resultTextDisplay && resultModal) {
+        resultTextDisplay.textContent = finalNumber.toString();
+        resultModal.classList.add("show");
+      }
+
+      setTimeout(() => {
+        startDiceIdle();
+      }, 2500);
+    }, rollDuration);
+  }
+
+  function setupDiceEvents() {
+    if (btnDiceRoll) {
+      btnDiceRoll.addEventListener("click", () => {
+        if (!diceIsRolling) {
+          startDiceFastRoll();
+        }
+      });
+    }
+
+    if (btnDiceGear && diceSettingModal) {
+      btnDiceGear.addEventListener("click", () => {
+        if (inputDiceMax) inputDiceMax.value = diceMax;
+        diceSettingModal.classList.add("show");
+      });
+    }
+
+    if (btnDiceSettingClose && diceSettingModal) {
+      btnDiceSettingClose.addEventListener("click", () => {
+        if (inputDiceMax) {
+          const val = parseInt(inputDiceMax.value);
+          if (!isNaN(val) && val >= 2 && val <= 1000) {
+            diceMax = val;
+            diceCurrent = 1;
+            updateDiceDisplay(diceCurrent);
+            stopDiceIdle();
+            if (modeCardDice && modeCardDice.style.display !== "none") {
+              startDiceIdle();
+            }
+          }
+        }
+        diceSettingModal.classList.remove("show");
+      });
+    }
+
+    if (diceSettingModal) {
+      diceSettingModal.addEventListener("click", (e) => {
+        if (e.target === diceSettingModal) {
+          diceSettingModal.classList.remove("show");
+        }
+      });
+    }
+
+    // Start idle if dice mode is active on load
+    const diceCard = document.getElementById("mode-card-number-dice");
+    if (diceCard && diceCard.style.display !== "none" && diceCard.style.display !== "") {
+      startDiceIdle();
+    } else {
+      // Start idle but paused, will be started when mode switched
+      // For preview, keep display at 1
+      updateDiceDisplay(1);
+    }
+  }
+
+  // Call after DOM ready
+  if (document.readyState === "loading") {
+    document.addEventListener("DOMContentLoaded", setupDiceEvents);
+  } else {
+    setupDiceEvents();
+  }
+
+  // Extend setupModalOutsideClose to also close dice modal
+  const originalSetupModalOutsideClose = setupModalOutsideClose;
+  const extendedSetupModalOutsideClose = function() {
+    originalSetupModalOutsideClose();
+    const modals = [diceSettingModal];
+    modals.forEach(modal => {
+      if (modal) {
+        modal.addEventListener("click", (e) => {
+          if (e.target === modal) modal.classList.remove("show");
+        });
+      }
+    });
+  };
+  // Replace call
+  setupModalOutsideClose = extendedSetupModalOutsideClose;
+
 
 
 
