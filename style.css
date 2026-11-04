@@ -589,7 +589,7 @@ body {
   filter: drop-shadow(0 0 1px #000);
   z-index: 20;
   transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-  /* Default UP position */
+  /* Default UP position with offset 12px tengah */
   top: 12px;
   left: 50%;
   transform: translateX(-50%);
@@ -598,20 +598,16 @@ body {
   border-top: 18px solid #fff;
 }
 
-/* Generic detector - base */
 .pointer-detector {
   position: absolute;
   width: 4px;
   height: 4px;
   background: transparent;
-  /* Default for UP */
   top: 18px;
   left: -2px;
 }
 
 /* === Pointer Position Variants with offset sedikit seperti UP di tengah === */
-
-/* UP - di atas tengah, offset ke bawah (12px dari edge) */
 .wheel-pointer.pointer-up {
   top: 12px;
   bottom: auto;
@@ -622,11 +618,8 @@ body {
   border-right: 8px solid transparent;
   border-top: 18px solid #fff;
   border-bottom: none;
-  border-right-color: transparent;
-  border-left-color: transparent;
 }
 
-/* DOWN - di bawah tengah, offset ke bawah (12px dari bottom edge) */
 .wheel-pointer.pointer-down {
   top: auto;
   bottom: 12px;
@@ -639,7 +632,6 @@ body {
   border-top: none;
 }
 
-/* LEFT - di kiri tengah, offset ke kiri (12px dari left edge) */
 .wheel-pointer.pointer-left {
   top: 50%;
   bottom: auto;
@@ -652,7 +644,6 @@ body {
   border-right: none;
 }
 
-/* RIGHT - di kanan tengah, offset ke kanan (12px dari right edge) */
 .wheel-pointer.pointer-right {
   top: 50%;
   bottom: auto;
@@ -665,33 +656,17 @@ body {
   border-left: none;
 }
 
-/* === Detector positions - tajam jarum yang nunjuk ke tengah === */
-.wheel-pointer.pointer-up .pointer-detector {
-  top: 18px;
-  left: -2px;
-}
-.wheel-pointer.pointer-down .pointer-detector {
-  top: -6px;
-  left: -2px;
-}
-.wheel-pointer.pointer-left .pointer-detector {
-  top: -2px;
-  left: 18px;
-}
-.wheel-pointer.pointer-right .pointer-detector {
-  top: -2px;
-  left: -6px;
-}
+.wheel-pointer.pointer-up .pointer-detector { top: 18px; left: -2px; }
+.wheel-pointer.pointer-down .pointer-detector { top: -6px; left: -2px; }
+.wheel-pointer.pointer-left .pointer-detector { top: -2px; left: 18px; }
+.wheel-pointer.pointer-right .pointer-detector { top: -2px; left: -6px; }
 
-/* === FIX BUG JUDUL: setiap arah pointer punya offset sesuai namanya saat has-title === */
-
-/* UP saat ada judul -> offset ke bawah (dari 12px jadi 40px) */
+/* === FIX BUG JUDUL: setiap arah punya offset sesuai namanya === */
 .wheel-wrapper.has-title .wheel-pointer.pointer-up {
   top: 40px;
   bottom: auto;
 }
 
-/* DOWN saat ada judul -> tetap di bawah tapi offset ke bawah biar gak ketutup (tetap 12px dari bawah) */
 .wheel-wrapper.has-title .wheel-pointer.pointer-down {
   top: auto;
   bottom: 12px;
@@ -699,7 +674,6 @@ body {
   transform: translateX(-50%);
 }
 
-/* LEFT saat ada judul -> tengah tapi offset ke bawah sedikit karena judul dorong wheel ke bawah */
 .wheel-wrapper.has-title .wheel-pointer.pointer-left {
   top: calc(50% + 22px);
   bottom: auto;
@@ -708,7 +682,6 @@ body {
   transform: translateY(-50%);
 }
 
-/* RIGHT saat ada judul -> tengah tapi offset ke bawah sedikit */
 .wheel-wrapper.has-title .wheel-pointer.pointer-right {
   top: calc(50% + 22px);
   bottom: auto;
@@ -717,7 +690,6 @@ body {
   transform: translateY(-50%);
 }
 
-/* Fallback generic has-title untuk yang belum ada class pointer (backward compat) */
 .wheel-wrapper.has-title .wheel-pointer:not(.pointer-up):not(.pointer-down):not(.pointer-left):not(.pointer-right) {
   top: 40px;
   left: 50%;
