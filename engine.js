@@ -717,9 +717,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupCustomModeDropdown();
 
-  // ========================================================================
-  // Pointer Position Dropdown - UP, DOWN, LEFT, RIGHT with binary check move
-  // ========================================================================
   function setupCustomPointerDropdown() {
     const customDropdown = document.getElementById('custom-pointer-dropdown');
     const customTrigger = document.getElementById('custom-pointer-trigger');
@@ -727,105 +724,37 @@ document.addEventListener("DOMContentLoaded", () => {
     const customOptionsContainer = document.getElementById('custom-pointer-options');
     const nativeSelect = document.getElementById('pointer-position-select');
     const customOptions = customOptionsContainer ? customOptionsContainer.querySelectorAll('.custom-dropdown-option') : document.querySelectorAll('#custom-pointer-options .custom-dropdown-option');
-
     if (!customDropdown || !customTrigger || !customOptionsContainer || customOptions.length === 0) return;
-
     let focusedIndex = 0;
-    customOptions.forEach((opt, idx) => {
-      if (opt.classList.contains('active')) focusedIndex = idx;
-    });
-
-    const isDesktop = window.matchMedia('(pointer: fine)').matches && 
-                      window.matchMedia('(hover: hover)').matches &&
-                      !('ontouchstart' in window);
-
+    customOptions.forEach((opt, idx) => { if (opt.classList.contains('active')) focusedIndex = idx; });
     function selectPointerOption(index) {
       customOptions.forEach(o => o.classList.remove('active', 'focused'));
       const selected = customOptions[index];
       if (!selected) return;
       selected.classList.add('active');
       focusedIndex = index;
-
       const value = selected.getAttribute('data-value');
       const key = selected.getAttribute('data-i18n');
       if (key) {
         const dict = translations[currentLang] || translations['en'];
-        if (dict[key]) {
-          customTriggerText.textContent = dict[key];
-        } else {
-          customTriggerText.textContent = selected.textContent;
-        }
+        customTriggerText.textContent = dict[key] || selected.textContent;
       } else {
         customTriggerText.textContent = selected.textContent;
       }
-
-      if (nativeSelect) {
-        nativeSelect.value = value;
-      }
-
+      if (nativeSelect) nativeSelect.value = value;
       updatePointerPosition(value);
-
       customDropdown.classList.remove('open');
     }
-
     customTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       const isOpening = !customDropdown.classList.contains('open');
-      if (isOpening) {
-        closeAllCustomDropdowns(customDropdown);
-      }
+      if (isOpening) closeAllCustomDropdowns(customDropdown);
       customDropdown.classList.toggle('open');
-      if (customDropdown.classList.contains('open')) {
-        customOptionsContainer.focus();
-      }
     });
-
     customOptions.forEach((opt, idx) => {
-      opt.addEventListener('click', (e) => {
-        e.stopPropagation();
-        selectPointerOption(idx);
-      });
-      opt.addEventListener('mouseenter', () => {
-        customOptions.forEach(o => o.classList.remove('focused'));
-        opt.classList.add('focused');
-        focusedIndex = idx;
-      });
+      opt.addEventListener('click', (e) => { e.stopPropagation(); selectPointerOption(idx); });
     });
-
-    customDropdown.addEventListener('keydown', (e) => {
-      if (!customDropdown.classList.contains('open')) return;
-      if (e.key === 'ArrowDown') {
-        e.preventDefault();
-        focusedIndex = (focusedIndex + 1) % customOptions.length;
-        customOptions.forEach(o => o.classList.remove('focused'));
-        customOptions[focusedIndex].classList.add('focused');
-        customOptions[focusedIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'ArrowUp') {
-        e.preventDefault();
-        focusedIndex = (focusedIndex - 1 + customOptions.length) % customOptions.length;
-        customOptions.forEach(o => o.classList.remove('focused'));
-        customOptions[focusedIndex].classList.add('focused');
-        customOptions[focusedIndex].scrollIntoView({ block: 'nearest' });
-      } else if (e.key === 'Enter') {
-        e.preventDefault();
-        selectPointerOption(focusedIndex);
-      } else if (e.key === 'Escape') {
-        customDropdown.classList.remove('open');
-      }
-    });
-
-    document.addEventListener('click', () => {
-      customDropdown.classList.remove('open');
-    });
-
-    const originalActiveOpt = document.querySelector('#custom-pointer-options .custom-dropdown-option.active');
-    if (originalActiveOpt && customTriggerText) {
-      const key = originalActiveOpt.getAttribute('data-i18n');
-      if (key) {
-        const dict = translations[currentLang] || translations['en'];
-        if (dict[key]) customTriggerText.textContent = dict[key];
-      }
-    }
+    document.addEventListener('click', () => customDropdown.classList.remove('open'));
   }
 
   setupCustomPointerDropdown();
@@ -839,19 +768,15 @@ document.addEventListener("DOMContentLoaded", () => {
       window._customDropdownUpdate(lang);
     }
     const dict = translations[lang] || translations['en'];
-    const pointerTriggerText = document.getElementById('custom-pointer-trigger-text');
-    const pointerActive = document.querySelector('#custom-pointer-options .custom-dropdown-option.active');
-    if (pointerTriggerText && pointerActive) {
-      const k = pointerActive.getAttribute('data-i18n');
-      if (k && dict[k]) {
-        pointerTriggerText.textContent = dict[k];
-      }
+    const ptrText = document.getElementById('custom-pointer-trigger-text');
+    const ptrActive = document.querySelector('#custom-pointer-options .custom-dropdown-option.active');
+    if (ptrText && ptrActive) {
+      const k = ptrActive.getAttribute('data-i18n');
+      if (k && dict[k]) ptrText.textContent = dict[k];
     }
     document.querySelectorAll('#custom-pointer-options .custom-dropdown-option').forEach(opt => {
       const k = opt.getAttribute('data-i18n');
-      if (k && dict[k]) {
-        opt.textContent = dict[k];
-      }
+      if (k && dict[k]) opt.textContent = dict[k];
     });
   };
 
@@ -1152,15 +1077,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // ========================================================================
   // Pointer Position System - UP, DOWN, LEFT, RIGHT with binary check
+  // 20px offset sesuai nama arah
   // ========================================================================
   let currentPointerPosition = "up";
-  let pointerAngle = -Math.PI / 2; // UP default: -90 deg pointing down to center
+  let pointerAngle = -Math.PI / 2;
 
   const POINTER_ANGLES = {
-    up: -Math.PI / 2,      // 12 o'clock, pointing down
-    right: 0,              // 3 o'clock, pointing left
-    down: Math.PI / 2,     // 6 o'clock, pointing up
-    left: Math.PI          // 9 o'clock, pointing right
+    up: -Math.PI / 2,
+    right: 0,
+    down: Math.PI / 2,
+    left: Math.PI
   };
 
   function getPointerAngleForPosition(pos) {
@@ -1170,14 +1096,11 @@ document.addEventListener("DOMContentLoaded", () => {
   function updatePointerPosition(pos) {
     currentPointerPosition = pos;
     pointerAngle = getPointerAngleForPosition(pos);
-    
     const pointerEl = document.getElementById("wheel-pointer");
     if (pointerEl) {
       pointerEl.classList.remove("pointer-up", "pointer-down", "pointer-left", "pointer-right");
       pointerEl.classList.add("pointer-" + pos);
     }
-    
-    // Re-render wheel to update active binary check based on new pointer angle
     renderWheel(currentRotation);
   }
 
@@ -1265,7 +1188,6 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.restore();
 
     if (totalSlices > 0) {
-      // Binary check moved according to pointer sharp edge pointing to center
       const normalizedAngle = ((pointerAngle - rotationAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
       let activeIdx = 0;
@@ -1369,7 +1291,6 @@ document.addEventListener("DOMContentLoaded", () => {
           const slicesArr = engine.getSlices();
           const totalSlices = slicesArr.length;
 
-          // Binary check sesuai posisi tajam jarum yang menunjuk ke tengah
           const normalizedAngle = ((pointerAngle - currentRotation) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
           let winningIdx = 0;
@@ -1649,21 +1570,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+
   setupModalOutsideClose();
-
-
-  // Initialize Lucide icons
-  if (typeof lucide !== "undefined" && lucide.createIcons) {
-    lucide.createIcons();
-  }
 
 
   // ========================================================================
   // === EDITABLE MUSIC TOGGLE - TARO DI PALING BAWAH BIAR GAMPANG EDIT ===
   // ========================================================================
   // FILE MUSIC ADA DI DALAM FOLDER AUDIO
-  // audio/music.mp3 = background music
+  // audio/music.mp3 = background music (AUTO EXECUTE SAAT MASUK WEB)
   // audio/click.wav = sound tiap klik button/checkbox (FIXED SINGLE SOUND)
+  // Offset pointer 20px sesuai nama arah: down ke bawah 20px, left ke kiri 20px, right ke kanan 20px, up ke atas 20px
   // ========================================================================
   const MUSIC_CONFIG = {
     src: "audio/music.mp3",
@@ -1689,10 +1606,8 @@ document.addEventListener("DOMContentLoaded", () => {
     return bgMusic;
   }
 
-  // Play click.wav - FIXED: hanya 1 sound per click, anti double
   function playClickSound() {
     const now = Date.now();
-    // Debounce 80ms biar tidak double
     if (now - lastClickTime < 80) return;
     lastClickTime = now;
     try {
@@ -1742,14 +1657,27 @@ document.addEventListener("DOMContentLoaded", () => {
     }).catch(()=>{});
   }
 
+  // === AUTO EXECUTE music.mp3 SAAT MASUK WEB ===
   const checkboxMusic = document.getElementById("checkbox-music");
-  const music = initBackgroundMusic();
-  if (checkboxMusic && checkboxMusic.checked) {
-    music.play().catch(() => {
-      console.log("Autoplay blocked, waiting for user interaction");
-    });
+  
+  function autoPlayMusic() {
+    const m = initBackgroundMusic();
+    if (checkboxMusic && checkboxMusic.checked) {
+      m.volume = MUSIC_CONFIG.volume;
+      const p = m.play();
+      if (p !== undefined) {
+        p.then(() => console.log("Music auto-play success"))
+         .catch(() => console.log("Autoplay blocked, waiting interaction"));
+      }
+    }
   }
 
+  // Langsung coba play saat DOM ready
+  autoPlayMusic();
+  setTimeout(autoPlayMusic, 300);
+  window.addEventListener("load", () => setTimeout(autoPlayMusic, 200));
+
+  // Fallback interaction
   const firstInteractionPlay = () => {
     if (checkboxMusic && checkboxMusic.checked && bgMusic && bgMusic.paused) {
       bgMusic.volume = MUSIC_CONFIG.volume;
@@ -1758,10 +1686,12 @@ document.addEventListener("DOMContentLoaded", () => {
     document.removeEventListener("click", firstInteractionPlay);
     document.removeEventListener("keydown", firstInteractionPlay);
     document.removeEventListener("touchstart", firstInteractionPlay);
+    document.removeEventListener("mousemove", firstInteractionPlay);
   };
   document.addEventListener("click", firstInteractionPlay);
   document.addEventListener("keydown", firstInteractionPlay);
   document.addEventListener("touchstart", firstInteractionPlay);
+  document.addEventListener("mousemove", firstInteractionPlay, { once: true });
 
   if (checkboxMusic) {
     checkboxMusic.addEventListener("change", (e) => {
@@ -1785,20 +1715,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === FIXED CLICK SOUND: SINGLE DELEGATED LISTENER, NO DOUBLE ===
+  // === FIXED CLICK SOUND SINGLE ===
   let clickSoundSetupDone = false;
   function setupClickSoundsFixed() {
     if (clickSoundSetupDone) return;
     clickSoundSetupDone = true;
-    
     document.addEventListener("click", (e) => {
-      const target = e.target;
-      const isButton = target.closest("button");
-      const isCheckbox = target.closest('input[type="checkbox"]');
-      const isCheckboxLabel = target.closest(".checkbox-container");
-      const isCustomOption = target.closest(".custom-dropdown-option");
-      
-      if (isButton || isCheckbox || isCheckboxLabel || isCustomOption) {
+      const isButton = e.target.closest("button");
+      const isCheckbox = e.target.closest('input[type="checkbox"]');
+      const isLabel = e.target.closest(".checkbox-container");
+      const isOption = e.target.closest(".custom-dropdown-option");
+      if (isButton || isCheckbox || isLabel || isOption) {
         playClickSound();
       }
     }, true);
@@ -1806,12 +1733,9 @@ document.addEventListener("DOMContentLoaded", () => {
   setupClickSoundsFixed();
 
   document.addEventListener("visibilitychange", () => {
-    if (!checkboxMusic) return;
-    if (!bgMusic) return;
+    if (!checkboxMusic || !bgMusic) return;
     if (document.hidden) {
-      if (!bgMusic.paused) {
-        bgMusic.pause();
-      }
+      if (!bgMusic.paused) bgMusic.pause();
     } else {
       if (checkboxMusic.checked && bgMusic.paused) {
         bgMusic.volume = MUSIC_CONFIG.volume;
@@ -1821,4 +1745,11 @@ document.addEventListener("DOMContentLoaded", () => {
   });
   // === END EDITABLE MUSIC TOGGLE ===
 
+
+
+
+  // Initialize Lucide icons
+  if (typeof lucide !== "undefined" && lucide.createIcons) {
+    lucide.createIcons();
+  }
 });
