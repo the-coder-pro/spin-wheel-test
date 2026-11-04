@@ -594,11 +594,84 @@ body {
   border-top: 18px solid #fff;
   filter: drop-shadow(0 0 1px #000);
   z-index: 20;
-  transition: top 0.2s ease;
+  transition: all 0.3s ease;
 }
 
 .wheel-wrapper.has-title .wheel-pointer {
   top: 35px;
+}
+
+/* Pointer Position Variants - UP (default) */
+.wheel-pointer.pointer-up {
+  top: 7px;
+  bottom: auto;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-top: 18px solid #fff;
+  border-bottom: none;
+}
+.wheel-wrapper.has-title .wheel-pointer.pointer-up {
+  top: 35px;
+}
+
+/* DOWN - bottom pointing up */
+.wheel-pointer.pointer-down {
+  top: auto;
+  bottom: 7px;
+  left: 50%;
+  right: auto;
+  transform: translateX(-50%);
+  border-left: 8px solid transparent;
+  border-right: 8px solid transparent;
+  border-bottom: 18px solid #fff;
+  border-top: none;
+}
+
+/* LEFT - left side pointing right */
+.wheel-pointer.pointer-left {
+  top: 50%;
+  bottom: auto;
+  left: 7px;
+  right: auto;
+  transform: translateY(-50%);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-left: 18px solid #fff;
+  border-right: none;
+}
+
+/* RIGHT - right side pointing left */
+.wheel-pointer.pointer-right {
+  top: 50%;
+  bottom: auto;
+  left: auto;
+  right: 7px;
+  transform: translateY(-50%);
+  border-top: 8px solid transparent;
+  border-bottom: 8px solid transparent;
+  border-right: 18px solid #fff;
+  border-left: none;
+}
+
+/* Adjust detector for each pointer position - keep at sharp tip pointing to center */
+.wheel-pointer.pointer-up .pointer-detector {
+  top: 18px;
+  left: -2px;
+}
+.wheel-pointer.pointer-down .pointer-detector {
+  top: -6px;
+  left: -2px;
+}
+.wheel-pointer.pointer-left .pointer-detector {
+  top: -2px;
+  left: 18px;
+}
+.wheel-pointer.pointer-right .pointer-detector {
+  top: -2px;
+  left: -6px;
 }
 
 .pointer-detector {
