@@ -160,7 +160,7 @@ test 2</textarea>
           </div>
         </div>
 
-        <!-- NUMBER DICE MODE CONTAINER - NEW MODE -->
+        <!-- NUMBER DICE MODE CONTAINER - NEW MODE - MAX 20 + BLACKLIST -->
         <div id="mode-card-number-dice" class="space-card mode-content-card position-relative" style="display: none;">
           <!-- Dice Configuration Gear Icon Button -->
           <button class="card-gear-icon-only" id="btn-dice-gear" title="Dice Settings" type="button">
@@ -172,6 +172,9 @@ test 2</textarea>
               <span class="dice-number" id="dice-number-display">1</span>
             </div>
             <div class="action-button-row" style="margin-top: 24px; width: 100%;">
+              <button class="card-btn square-icon-btn" id="btn-reset-dice" title="Delete All Blacklist" type="button" style="display: none;">
+                <i data-lucide="refresh-cw"></i>
+              </button>
               <button class="card-btn spin-action-btn" id="btn-dice-roll" type="button" data-i18n="btn-dice-start">START ROLL</button>
             </div>
           </div>
@@ -337,14 +340,21 @@ test 3</textarea>
     </div>
   </div>
 
-  <!-- Number Dice Settings Modal Popup -->
+  <!-- Number Dice Settings Modal Popup - MAX 20 + BLACKLIST CHECKBOX -->
   <div class="result-modal" id="dice-setting-modal">
     <div class="result-card">
       <h2 class="card-title" data-i18n="dice-setting-title">DICE SETTINGS</h2>
       <div class="setting-option-row" style="margin-bottom: 16px;">
         <label class="mode-label" for="input-dice-max" style="margin-bottom: 8px;" data-i18n="dice-max-label">MAX NUMBER</label>
-        <input type="number" id="input-dice-max" class="wheel-card-title-input" value="6" min="2" max="1000">
-        <p class="card-desc" style="font-size: 11px; margin-top: 6px; margin-bottom: 0;" data-i18n="dice-max-desc">1 to max, e.g. 6 = 1-6</p>
+        <input type="number" id="input-dice-max" class="wheel-card-title-input" value="20" min="2" max="1000">
+        <p class="card-desc" style="font-size: 11px; margin-top: 6px; margin-bottom: 0;" data-i18n="dice-max-desc">1 to max, e.g. 20 = 1-20</p>
+      </div>
+      <div class="setting-option-row">
+        <label class="checkbox-container">
+          <input type="checkbox" id="checkbox-dice-blacklist">
+          <span class="checkbox-label-text" data-i18n="dice-blacklist-label">Blacklist yang sudah terpilih</span>
+        </label>
+        <p class="card-desc" style="font-size: 11px; margin-top: 6px; margin-bottom: 0;" data-i18n="dice-blacklist-desc">Jika aktif, angka yang sudah keluar tidak akan keluar lagi</p>
       </div>
       <button class="card-btn" id="btn-dice-setting-close" type="button" style="margin-top: 20px; width: 100%;" data-i18n="btn-apply-close">APPLY & CLOSE</button>
     </div>
