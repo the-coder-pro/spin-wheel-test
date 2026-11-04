@@ -171,7 +171,12 @@ test 2</textarea>
             <div class="dice-box" id="dice-box">
               <span class="dice-number" id="dice-number-display">1</span>
             </div>
-            <div class="action-button-row" style="margin-top: 24px; width: 100%;">
+            <!-- Blacklist Output - Below box, above roll button, bilingual -->
+            <div class="dice-blacklist-output" id="dice-blacklist-output">
+              <div class="dice-blacklist-label" data-i18n="dice-blacklist-output-label">Angka Blacklist:</div>
+              <div class="dice-blacklist-list" id="dice-blacklist-list" data-i18n="dice-blacklist-empty">Tidak ada</div>
+            </div>
+            <div class="action-button-row" style="margin-top: 16px; width: 100%;">
               <button class="card-btn square-icon-btn" id="btn-reset-dice" title="Delete All Blacklist" type="button" style="display: none;">
                 <i data-lucide="refresh-cw"></i>
               </button>
