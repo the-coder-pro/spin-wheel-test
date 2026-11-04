@@ -1824,13 +1824,13 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function updateDiceBlacklistDisplay() {
-    if (!diceBlacklistList) return;
+    if (!diceBlacklistList || !diceBlacklistOutput) return;
     const dict = translations[currentLang] || translations['en'];
     if (!diceBlacklistEnabled) {
-      diceBlacklistList.textContent = dict['dice-blacklist-empty'] || "None";
-      diceBlacklistList.className = "dice-blacklist-list empty";
+      diceBlacklistOutput.style.display = "none";
       return;
     }
+    diceBlacklistOutput.style.display = "block";
     if (diceBlacklist.size === 0) {
       diceBlacklistList.textContent = dict['dice-blacklist-empty'] || "None";
       diceBlacklistList.className = "dice-blacklist-list empty";
