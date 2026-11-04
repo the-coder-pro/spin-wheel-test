@@ -133,7 +133,9 @@ document.addEventListener("DOMContentLoaded", () => {
       "btn-dice-start": "START ROLL",
       "dice-setting-title": "DICE SETTINGS",
       "dice-max-label": "MAX NUMBER",
-      "dice-max-desc": "1 to max, e.g. 6 = 1-6",
+      "dice-max-desc": "1 to max, e.g. 20 = 1-20",
+      "dice-blacklist-label": "Blacklist yang sudah terpilih",
+      "dice-blacklist-desc": "Jika aktif, angka yang sudah keluar tidak akan keluar lagi",
       "btn-dice-start": "START ROLL",
       "dice-setting-title": "PENGATURAN DICE",
       "dice-max-label": "ANGKA MAKSIMUM",
@@ -403,13 +405,17 @@ document.addEventListener("DOMContentLoaded", () => {
   const diceSettingModal = document.getElementById("dice-setting-modal");
   const btnDiceSettingClose = document.getElementById("btn-dice-setting-close");
   const inputDiceMax = document.getElementById("input-dice-max");
+  const checkboxDiceBlacklist = document.getElementById("checkbox-dice-blacklist");
+  const btnResetDice = document.getElementById("btn-reset-dice");
 
-  // Dice State
-  let diceMax = 6;
+  // Dice State - MAX 20 + BLACKLIST
+  let diceMax = 20;
   let diceCurrent = 1;
   let diceIdleInterval = null;
   let diceFastInterval = null;
   let diceIsRolling = false;
+  let diceBlacklist = new Set();
+  let diceBlacklistEnabled = false;
 
   // Spin Wheel Canvas & Input Elements
   const canvas = document.getElementById("wheel-canvas");
@@ -1735,15 +1741,52 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function getAvailableNumbers() {
+    const available = [];
+    for (let i = 1; i <= diceMax; i++) {
+      if (!diceBlacklistEnabled || !diceBlacklist.has(i)) {
+        available.push(i);
+      }
+    }
+    return available;
+  }
+
+  function getNextDiceNumber(current) {
+    let next = current + 1;
+    if (next > diceMax) next = 1;
+    if (diceBlacklistEnabled) {
+      let attempts = 0;
+      while (diceBlacklist.has(next) && attempts < diceMax) {
+        next++;
+        if (next > diceMax) next = 1;
+        attempts++;
+      }
+      if (diceBlacklist.has(next)) return null;
+    }
+    return next;
+  }
+
   function startDiceIdle() {
     stopDiceIdle();
     if (!diceNumberDisplay) return;
     if (diceIsRolling) return;
-    diceCurrent = 1;
+    const available = getAvailableNumbers();
+    if (available.length === 0) {
+      diceCurrent = 1;
+      updateDiceDisplay("-");
+      return;
+    }
+    diceCurrent = available[0];
     updateDiceDisplay(diceCurrent);
     diceIdleInterval = setInterval(() => {
-      diceCurrent++;
-      if (diceCurrent > diceMax) diceCurrent = 1;
+      const next = getNextDiceNumber(diceCurrent);
+      if (next === null) {
+        clearInterval(diceIdleInterval);
+        diceIdleInterval = null;
+        updateDiceDisplay("-");
+        return;
+      }
+      diceCurrent = next;
       updateDiceDisplay(diceCurrent);
     }, 500);
   }
@@ -1755,9 +1798,32 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
+  function updateDiceRefreshButton() {
+    if (!btnResetDice) return;
+    if (diceBlacklistEnabled && diceBlacklist.size > 0) {
+      btnResetDice.style.display = "flex";
+    } else if (diceBlacklistEnabled) {
+      btnResetDice.style.display = "flex";
+    } else {
+      btnResetDice.style.display = "none";
+    }
+    if (typeof lucide !== "undefined" && lucide.createIcons) {
+      lucide.createIcons();
+    }
+  }
+
   function startDiceFastRoll() {
     if (diceIsRolling) return;
     if (!diceNumberDisplay || !diceBox || !btnDiceRoll) return;
+    
+    const available = getAvailableNumbers();
+    if (available.length === 0) {
+      if (resultTextDisplay && resultModal) {
+        resultTextDisplay.textContent = "All numbers blacklisted! Clear blacklist.";
+        resultModal.classList.add("show");
+      }
+      return;
+    }
     
     diceIsRolling = true;
     stopDiceIdle();
@@ -1769,8 +1835,17 @@ document.addEventListener("DOMContentLoaded", () => {
     let fastCurrent = diceCurrent;
 
     diceFastInterval = setInterval(() => {
-      fastCurrent++;
-      if (fastCurrent > diceMax) fastCurrent = 1;
+      let next = fastCurrent + 1;
+      if (next > diceMax) next = 1;
+      if (diceBlacklistEnabled) {
+        let attempts = 0;
+        while (diceBlacklist.has(next) && attempts < diceMax) {
+          next++;
+          if (next > diceMax) next = 1;
+          attempts++;
+        }
+      }
+      fastCurrent = next;
       updateDiceDisplay(fastCurrent);
       diceCurrent = fastCurrent;
     }, 50);
@@ -1781,9 +1856,21 @@ document.addEventListener("DOMContentLoaded", () => {
       clearInterval(diceFastInterval);
       diceFastInterval = null;
       
-      const finalNumber = Math.floor(Math.random() * diceMax) + 1;
+      const availableFinal = getAvailableNumbers();
+      let finalNumber;
+      if (availableFinal.length === 0) {
+        finalNumber = diceCurrent;
+      } else {
+        finalNumber = availableFinal[Math.floor(Math.random() * availableFinal.length)];
+      }
+      
       diceCurrent = finalNumber;
       updateDiceDisplay(finalNumber);
+      
+      if (diceBlacklistEnabled) {
+        diceBlacklist.add(finalNumber);
+        updateDiceRefreshButton();
+      }
       
       diceBox.classList.remove("rolling");
       diceBox.classList.add("result-flash");
@@ -1797,14 +1884,19 @@ document.addEventListener("DOMContentLoaded", () => {
       const dict = translations[currentLang] || translations['en'];
       btnDiceRoll.textContent = dict['btn-dice-start'] || "START ROLL";
 
-      // Show result modal
       if (resultTextDisplay && resultModal) {
+        let resultText = finalNumber.toString();
+        if (diceBlacklistEnabled && diceBlacklist.size > 0) {
+          resultText += ` (Blacklist: ${Array.from(diceBlacklist).sort((a,b)=>a-b).join(', ')})`;
+        }
         resultTextDisplay.textContent = finalNumber.toString();
         resultModal.classList.add("show");
       }
 
       setTimeout(() => {
-        startDiceIdle();
+        if (getAvailableNumbers().length > 0) {
+          startDiceIdle();
+        }
       }, 2500);
     }, rollDuration);
   }
@@ -1818,9 +1910,34 @@ document.addEventListener("DOMContentLoaded", () => {
       });
     }
 
+    if (btnResetDice) {
+      btnResetDice.addEventListener("click", () => {
+        diceBlacklist.clear();
+        updateDiceRefreshButton();
+        if (modeCardDice && modeCardDice.style.display !== "none") {
+          stopDiceIdle();
+          diceCurrent = 1;
+          updateDiceDisplay(diceCurrent);
+          startDiceIdle();
+        }
+      });
+    }
+
+    if (checkboxDiceBlacklist) {
+      checkboxDiceBlacklist.addEventListener("change", (e) => {
+        diceBlacklistEnabled = e.target.checked;
+        updateDiceRefreshButton();
+        if (modeCardDice && modeCardDice.style.display !== "none") {
+          stopDiceIdle();
+          startDiceIdle();
+        }
+      });
+    }
+
     if (btnDiceGear && diceSettingModal) {
       btnDiceGear.addEventListener("click", () => {
         if (inputDiceMax) inputDiceMax.value = diceMax;
+        if (checkboxDiceBlacklist) checkboxDiceBlacklist.checked = diceBlacklistEnabled;
         diceSettingModal.classList.add("show");
       });
     }
@@ -1831,13 +1948,25 @@ document.addEventListener("DOMContentLoaded", () => {
           const val = parseInt(inputDiceMax.value);
           if (!isNaN(val) && val >= 2 && val <= 1000) {
             diceMax = val;
+            if (diceBlacklist.size > 0) {
+              const newBlacklist = new Set();
+              diceBlacklist.forEach(num => {
+                if (num <= diceMax) newBlacklist.add(num);
+              });
+              diceBlacklist = newBlacklist;
+            }
             diceCurrent = 1;
             updateDiceDisplay(diceCurrent);
             stopDiceIdle();
             if (modeCardDice && modeCardDice.style.display !== "none") {
               startDiceIdle();
             }
+            updateDiceRefreshButton();
           }
+        }
+        if (checkboxDiceBlacklist) {
+          diceBlacklistEnabled = checkboxDiceBlacklist.checked;
+          updateDiceRefreshButton();
         }
         diceSettingModal.classList.remove("show");
       });
@@ -1856,10 +1985,9 @@ document.addEventListener("DOMContentLoaded", () => {
     if (diceCard && diceCard.style.display !== "none" && diceCard.style.display !== "") {
       startDiceIdle();
     } else {
-      // Start idle but paused, will be started when mode switched
-      // For preview, keep display at 1
       updateDiceDisplay(1);
     }
+    updateDiceRefreshButton();
   }
 
   // Call after DOM ready
