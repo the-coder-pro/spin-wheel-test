@@ -284,7 +284,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const customTrigger = document.getElementById('custom-lang-trigger');
     const customTriggerText = document.getElementById('custom-lang-trigger-text');
     const customOptionsContainer = document.getElementById('custom-lang-options');
-    // Scoped query to prevent tembus to other dropdowns
+    // Scoped query to prevent leaking to other dropdowns
     const customOptions = customOptionsContainer ? customOptionsContainer.querySelectorAll('.custom-dropdown-option') : document.querySelectorAll('#custom-lang-options .custom-dropdown-option');
 
     if (!customDropdown || !customTrigger || !customOptionsContainer || customOptions.length === 0) return;
@@ -419,7 +419,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const diceBlacklistList = document.getElementById("dice-blacklist-list");
 
   // Dice State - MAX 20 + BLACKLIST
-  let diceMax = 20;
+  let diceMax = 6;
   let diceCurrent = 1;
   let diceIdleInterval = null;
   let diceFastInterval = null;
@@ -564,16 +564,22 @@ document.addEventListener("DOMContentLoaded", () => {
         modeCardGroupContainer.style.display = "none";
         if (modeCardDice) modeCardDice.style.display = "none";
         stopDiceIdle();
+        const saveBtn = document.getElementById("btn-result-save");
+        if (saveBtn) saveBtn.style.display = "block";
       } else if (target.value === "give-group") {
         modeCardSpin.style.display = "none";
         modeCardGroupContainer.style.display = "flex";
         if (modeCardDice) modeCardDice.style.display = "none";
         stopDiceIdle();
+        const saveBtn = document.getElementById("btn-result-save");
+        if (saveBtn) saveBtn.style.display = "block";
       } else if (target.value === "number-dice") {
         modeCardSpin.style.display = "none";
         modeCardGroupContainer.style.display = "none";
         if (modeCardDice) modeCardDice.style.display = "block";
         startDiceIdle();
+        const saveBtn = document.getElementById("btn-result-save");
+        if (saveBtn) saveBtn.style.display = "none";
       }
       updateScrollBounds();
     });
@@ -581,7 +587,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================================================
-  // Helper: Close all custom dropdowns to prevent tembus to other dropdowns
+  // Helper: Close all custom dropdowns to prevent leaking to other dropdowns
   // ========================================================================
   function closeAllCustomDropdowns(except = null) {
     document.querySelectorAll('.custom-dropdown.open').forEach(dd => {
@@ -599,7 +605,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const customTrigger = document.getElementById('custom-mode-trigger');
     const customTriggerText = document.getElementById('custom-mode-trigger-text');
     const customOptionsContainer = document.getElementById('custom-mode-options');
-    // Scoped query to prevent tembus to other dropdowns
+    // Scoped query to prevent leaking to other dropdowns
     const customOptions = customOptionsContainer ? customOptionsContainer.querySelectorAll('.custom-dropdown-option') : document.querySelectorAll('#custom-mode-options .custom-dropdown-option');
 
     if (!customDropdown || !customTrigger || !customOptionsContainer || customOptions.length === 0) return;
@@ -646,7 +652,7 @@ document.addEventListener("DOMContentLoaded", () => {
       customDropdown.classList.remove('open');
     }
 
-    // Trigger click toggles dropdown - close others to prevent tembus
+    // Trigger click toggles dropdown - close others to prevent leaking
     customTrigger.addEventListener('click', (e) => {
       e.stopPropagation();
       const isOpening = !customDropdown.classList.contains('open');
@@ -1537,12 +1543,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
   // ========================================================================
-  // === EDITABLE MUSIC TOGGLE - TARO DI PALING BAWAH BIAR GAMPANG EDIT ===
+  // === EDITABLE MUSIC TOGGLE - PLACED AT THE VERY BOTTOM FOR EASY EDITING ===
   // ========================================================================
-  // FILE MUSIC ADA DI DALAM FOLDER AUDIO
+  // MUSIC FILES ARE LOCATED INSIDE AUDIO FOLDER
   // audio/music.mp3 = background music (AUTO EXECUTE FIXED)
-  // audio/click.wav = sound tiap klik button/checkbox (FIXED SINGLE SOUND)
-  // FIX: muted autoplay untuk bypass browser block, lalu unmute
+  // audio/click.wav = sound for every button/checkbox click (FIXED SINGLE SOUND)
+  // FIX: muted autoplay to bypass browser block, then unmute
   // ========================================================================
   const MUSIC_CONFIG = {
     src: "audio/music.mp3",
@@ -1741,8 +1747,8 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================================================================
   // === NUMBER DICE SYSTEM ===
   // ========================================================================
-  // Idle: 1 -> max -> 1 loop dengan kecepatan 0.5 detik per angka
-  // Roll: 1 -> max loop dengan kecepatan 0.05 detik per angka (sangat cepat), stop instan
+  // Idle: 1 -> max -> 1 loop with speed 0.5 second per number
+  // Roll: 1 -> max loop with speed 0.05 second per number (very fast), instant stop
   // ========================================================================
 
   function updateDiceDisplay(num) {
@@ -1914,12 +1920,11 @@ document.addEventListener("DOMContentLoaded", () => {
       btnDiceRoll.textContent = dict['btn-dice-start'] || "START ROLL";
 
       if (resultTextDisplay && resultModal) {
-        let resultText = finalNumber.toString();
-        if (diceBlacklistEnabled && diceBlacklist.size > 0) {
-          resultText += ` (Blacklist: ${Array.from(diceBlacklist).sort((a,b)=>a-b).join(', ')})`;
-        }
         resultTextDisplay.textContent = finalNumber.toString();
         resultModal.classList.add("show");
+        // Hide save button for dice mode
+        const saveBtn = document.getElementById("btn-result-save");
+        if (saveBtn) saveBtn.style.display = "none";
       }
 
       setTimeout(() => {
@@ -1975,7 +1980,7 @@ document.addEventListener("DOMContentLoaded", () => {
       btnDiceSettingClose.addEventListener("click", () => {
         if (inputDiceMax) {
           const val = parseInt(inputDiceMax.value);
-          if (!isNaN(val) && val >= 2 && val <= 1000) {
+          if (!isNaN(val) && val >= 2 && val <= 20) {
             diceMax = val;
             if (diceBlacklist.size > 0) {
               const newBlacklist = new Set();
