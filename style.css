@@ -589,8 +589,8 @@ body {
   filter: drop-shadow(0 0 1px #000);
   z-index: 20;
   transition: all 0.35s cubic-bezier(0.25, 1, 0.5, 1);
-  /* Default UP position with offset 12px tengah */
-  top: 20px;
+  /* Default UP - tip di tengah border (9px di dalam, 9px di luar) */
+  top: 11px;
   left: 50%;
   transform: translateX(-50%);
   border-left: 8px solid transparent;
@@ -607,9 +607,10 @@ body {
   left: -2px;
 }
 
-/* === Pointer Position Variants with offset sedikit seperti UP di tengah === */
+/* === Pointer Position 20px -> FIX: tengah antara luar dan dalam === */
+/* UP: offset 11px dari wrapper top = 20px margin - 9px setengah tinggi jarum, jadi jarum nempel di tengah border */
 .wheel-pointer.pointer-up {
-  top: 20px;
+  top: 11px;
   bottom: auto;
   left: 50%;
   right: auto;
@@ -620,9 +621,10 @@ body {
   border-bottom: none;
 }
 
+/* DOWN: offset 11px dari bawah, tengah antara luar dan dalam */
 .wheel-pointer.pointer-down {
   top: auto;
-  bottom: 20px;
+  bottom: 11px;
   left: 50%;
   right: auto;
   transform: translateX(-50%);
@@ -632,10 +634,11 @@ body {
   border-top: none;
 }
 
+/* LEFT: offset tengah antara luar wheel dan dalam, pakai calc 50% - 139px (130 radius + 9 setengah jarum) */
 .wheel-pointer.pointer-left {
   top: 50%;
   bottom: auto;
-  left: 20px;
+  left: calc(50% - 139px);
   right: auto;
   transform: translateY(-50%);
   border-top: 8px solid transparent;
@@ -644,11 +647,12 @@ body {
   border-right: none;
 }
 
+/* RIGHT: offset tengah antara luar dan dalam */
 .wheel-pointer.pointer-right {
   top: 50%;
   bottom: auto;
   left: auto;
-  right: 20px;
+  right: calc(50% - 139px);
   transform: translateY(-50%);
   border-top: 8px solid transparent;
   border-bottom: 8px solid transparent;
@@ -661,15 +665,15 @@ body {
 .wheel-pointer.pointer-left .pointer-detector { top: -2px; left: 18px; }
 .wheel-pointer.pointer-right .pointer-detector { top: -2px; left: -6px; }
 
-/* === FIX BUG JUDUL: setiap arah punya offset sesuai namanya === */
+/* === FIX BUG JUDUL + OFFSET TENGAH === */
 .wheel-wrapper.has-title .wheel-pointer.pointer-up {
-  top: 48px;
+  top: 39px;
   bottom: auto;
 }
 
 .wheel-wrapper.has-title .wheel-pointer.pointer-down {
   top: auto;
-  bottom: 20px;
+  bottom: 11px;
   left: 50%;
   transform: translateX(-50%);
 }
@@ -677,7 +681,7 @@ body {
 .wheel-wrapper.has-title .wheel-pointer.pointer-left {
   top: calc(50% + 22px);
   bottom: auto;
-  left: 20px;
+  left: calc(50% - 139px);
   right: auto;
   transform: translateY(-50%);
 }
@@ -686,15 +690,17 @@ body {
   top: calc(50% + 22px);
   bottom: auto;
   left: auto;
-  right: 20px;
+  right: calc(50% - 139px);
   transform: translateY(-50%);
 }
 
 .wheel-wrapper.has-title .wheel-pointer:not(.pointer-up):not(.pointer-down):not(.pointer-left):not(.pointer-right) {
-  top: 48px;
+  top: 39px;
   left: 50%;
   transform: translateX(-50%);
 }
+
+
 
 .wheel-container {
   position: relative;
