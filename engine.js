@@ -158,6 +158,11 @@ document.addEventListener("DOMContentLoaded", () => {
       "btn-clear-items": "HAPUS ITEM",
       "spin-power-label": "KEKUATAN SPIN (1-10)",
       "spin-power-desc": "1=x1, 2=x1.5, 3=x2, dst (kali 0.5)",
+      "pointer-position-label": "POSISI JARUM",
+      "pointer-up": "ATAS",
+      "pointer-down": "BAWAH",
+      "pointer-right": "KANAN",
+      "pointer-left": "KIRI",
       "placeholder-empty": "",
       "placeholder-empty-short": ""
     },
@@ -208,6 +213,11 @@ document.addEventListener("DOMContentLoaded", () => {
       "btn-clear-items": "CLEAR ITEMS",
       "spin-power-label": "SPIN POWER (1-10)",
       "spin-power-desc": "1=x1, 2=x1.5, 3=x2, etc (x0.5 multiplier)",
+      "pointer-position-label": "POINTER POSITION",
+      "pointer-up": "UP",
+      "pointer-down": "DOWN",
+      "pointer-right": "RIGHT",
+      "pointer-left": "LEFT",
       "placeholder-empty": "",
       "placeholder-empty-short": ""
     }
@@ -707,6 +717,122 @@ document.addEventListener("DOMContentLoaded", () => {
 
   setupCustomModeDropdown();
 
+  // ========================================================================
+  // Pointer Position Dropdown - UP, DOWN, LEFT, RIGHT with binary check move
+  // ========================================================================
+  function setupCustomPointerDropdown() {
+    const customDropdown = document.getElementById('custom-pointer-dropdown');
+    const customTrigger = document.getElementById('custom-pointer-trigger');
+    const customTriggerText = document.getElementById('custom-pointer-trigger-text');
+    const customOptionsContainer = document.getElementById('custom-pointer-options');
+    const nativeSelect = document.getElementById('pointer-position-select');
+    const customOptions = customOptionsContainer ? customOptionsContainer.querySelectorAll('.custom-dropdown-option') : document.querySelectorAll('#custom-pointer-options .custom-dropdown-option');
+
+    if (!customDropdown || !customTrigger || !customOptionsContainer || customOptions.length === 0) return;
+
+    let focusedIndex = 0;
+    customOptions.forEach((opt, idx) => {
+      if (opt.classList.contains('active')) focusedIndex = idx;
+    });
+
+    const isDesktop = window.matchMedia('(pointer: fine)').matches && 
+                      window.matchMedia('(hover: hover)').matches &&
+                      !('ontouchstart' in window);
+
+    function selectPointerOption(index) {
+      customOptions.forEach(o => o.classList.remove('active', 'focused'));
+      const selected = customOptions[index];
+      if (!selected) return;
+      selected.classList.add('active');
+      focusedIndex = index;
+
+      const value = selected.getAttribute('data-value');
+      const key = selected.getAttribute('data-i18n');
+      if (key) {
+        const dict = translations[currentLang] || translations['en'];
+        if (dict[key]) {
+          customTriggerText.textContent = dict[key];
+        } else {
+          customTriggerText.textContent = selected.textContent;
+        }
+      } else {
+        customTriggerText.textContent = selected.textContent;
+      }
+
+      if (nativeSelect) {
+        nativeSelect.value = value;
+      }
+
+      // Update pointer position and binary check
+      updatePointerPosition(value);
+
+      customDropdown.classList.remove('open');
+    }
+
+    customTrigger.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isOpening = !customDropdown.classList.contains('open');
+      if (isOpening) {
+        closeAllCustomDropdowns(customDropdown);
+      }
+      customDropdown.classList.toggle('open');
+      if (customDropdown.classList.contains('open')) {
+        customOptionsContainer.focus();
+      }
+    });
+
+    customOptions.forEach((opt, idx) => {
+      opt.addEventListener('click', (e) => {
+        e.stopPropagation();
+        selectPointerOption(idx);
+      });
+      opt.addEventListener('mouseenter', () => {
+        customOptions.forEach(o => o.classList.remove('focused'));
+        opt.classList.add('focused');
+        focusedIndex = idx;
+      });
+    });
+
+    customDropdown.addEventListener('keydown', (e) => {
+      if (!customDropdown.classList.contains('open')) return;
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        focusedIndex = (focusedIndex + 1) % customOptions.length;
+        customOptions.forEach(o => o.classList.remove('focused'));
+        customOptions[focusedIndex].classList.add('focused');
+        customOptions[focusedIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        focusedIndex = (focusedIndex - 1 + customOptions.length) % customOptions.length;
+        customOptions.forEach(o => o.classList.remove('focused'));
+        customOptions[focusedIndex].classList.add('focused');
+        customOptions[focusedIndex].scrollIntoView({ block: 'nearest' });
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        selectPointerOption(focusedIndex);
+      } else if (e.key === 'Escape') {
+        customDropdown.classList.remove('open');
+      }
+    });
+
+    // Close when clicking outside
+    document.addEventListener('click', () => {
+      customDropdown.classList.remove('open');
+    });
+
+    // Update trigger text on language change
+    const originalActiveOpt = document.querySelector('#custom-pointer-options .custom-dropdown-option.active');
+    if (originalActiveOpt && customTriggerText) {
+      const key = originalActiveOpt.getAttribute('data-i18n');
+      if (key) {
+        const dict = translations[currentLang] || translations['en'];
+        if (dict[key]) customTriggerText.textContent = dict[key];
+      }
+    }
+  }
+
+  setupCustomPointerDropdown();
+
   // Wrap applyLanguage to also update custom dropdown after original
   const _origApplyLanguage = applyLanguage;
   applyLanguage = function(lang) {
@@ -716,6 +842,23 @@ document.addEventListener("DOMContentLoaded", () => {
     if (customDropdown && window._customDropdownUpdate) {
       window._customDropdownUpdate(lang);
     }
+    // Update pointer dropdown texts
+    const dict = translations[lang] || translations['en'];
+    const pointerTriggerText = document.getElementById('custom-pointer-trigger-text');
+    const pointerActive = document.querySelector('#custom-pointer-options .custom-dropdown-option.active');
+    if (pointerTriggerText && pointerActive) {
+      const k = pointerActive.getAttribute('data-i18n');
+      if (k && dict[k]) {
+        pointerTriggerText.textContent = dict[k];
+      }
+    }
+    // Update all pointer options text
+    document.querySelectorAll('#custom-pointer-options .custom-dropdown-option').forEach(opt => {
+      const k = opt.getAttribute('data-i18n');
+      if (k && dict[k]) {
+        opt.textContent = dict[k];
+      }
+    });
   };
 
 
@@ -1013,6 +1156,37 @@ document.addEventListener("DOMContentLoaded", () => {
   let currentSliceIndex = -1;
   let lastWinningText = "";
 
+  // ========================================================================
+  // Pointer Position System - UP, DOWN, LEFT, RIGHT with binary check
+  // ========================================================================
+  let currentPointerPosition = "up";
+  let pointerAngle = -Math.PI / 2; // UP default: -90 deg pointing down to center
+
+  const POINTER_ANGLES = {
+    up: -Math.PI / 2,      // 12 o'clock, pointing down
+    right: 0,              // 3 o'clock, pointing left
+    down: Math.PI / 2,     // 6 o'clock, pointing up
+    left: Math.PI          // 9 o'clock, pointing right
+  };
+
+  function getPointerAngleForPosition(pos) {
+    return POINTER_ANGLES[pos] !== undefined ? POINTER_ANGLES[pos] : POINTER_ANGLES.up;
+  }
+
+  function updatePointerPosition(pos) {
+    currentPointerPosition = pos;
+    pointerAngle = getPointerAngleForPosition(pos);
+    
+    const pointerEl = document.getElementById("wheel-pointer");
+    if (pointerEl) {
+      pointerEl.classList.remove("pointer-up", "pointer-down", "pointer-left", "pointer-right");
+      pointerEl.classList.add("pointer-" + pos);
+    }
+    
+    // Re-render wheel to update active binary check based on new pointer angle
+    renderWheel(currentRotation);
+  }
+
   // Renders the interactive wheel onto the HTML5 Canvas
   function renderWheel(rotationAngle = 0) {
     if (!ctx || !canvas) return;
@@ -1097,14 +1271,15 @@ document.addEventListener("DOMContentLoaded", () => {
     ctx.restore();
 
     if (totalSlices > 0) {
-      const normalizedAngle = ((-rotationAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+      // Binary check moved according to pointer sharp edge pointing to center
+      const normalizedAngle = ((pointerAngle - rotationAngle) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
       let activeIdx = 0;
       for (let i = 0; i < totalSlices; i++) {
         const s = slices[i];
-        let sa = (s.start_angle + Math.PI/2) % (2*Math.PI);
+        let sa = (s.start_angle) % (2*Math.PI);
         if (sa < 0) sa += 2*Math.PI;
-        let ea = (s.end_angle + Math.PI/2) % (2*Math.PI);
+        let ea = (s.end_angle) % (2*Math.PI);
         if (ea < 0) ea += 2*Math.PI;
 
         if (sa > ea) {
@@ -1200,14 +1375,15 @@ document.addEventListener("DOMContentLoaded", () => {
           const slicesArr = engine.getSlices();
           const totalSlices = slicesArr.length;
 
-          const normalizedAngle = ((-currentRotation) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+          // Binary check sesuai posisi tajam jarum yang menunjuk ke tengah
+          const normalizedAngle = ((pointerAngle - currentRotation) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
 
           let winningIdx = 0;
           for (let i = 0; i < totalSlices; i++) {
             const s = slicesArr[i];
-            let sa = (s.start_angle + Math.PI/2) % (2*Math.PI);
+            let sa = (s.start_angle) % (2*Math.PI);
             if (sa < 0) sa += 2*Math.PI;
-            let ea = (s.end_angle + Math.PI/2) % (2*Math.PI);
+            let ea = (s.end_angle) % (2*Math.PI);
             if (ea < 0) ea += 2*Math.PI;
 
             if (sa > ea) {
@@ -1493,22 +1669,22 @@ document.addEventListener("DOMContentLoaded", () => {
   // ========================================================================
   // FILE MUSIC ADA DI DALAM FOLDER AUDIO
   // audio/music.mp3 = background music
-  // audio/click.mp3 = sound tiap klik button/checkbox
+  // audio/click.wav = sound tiap klik button/checkbox (FIXED SINGLE SOUND)
   // ========================================================================
   const MUSIC_CONFIG = {
-    src: "audio/music.mp3", // <--- FILE BACKGROUND MUSIC
-    volume: 0.5, // 0.0 - 1.0
+    src: "audio/music.mp3",
+    volume: 0.5,
     loop: true
   };
 
   const CLICK_CONFIG = {
-    src: "audio/click.wav", // <--- FILE CLICK SOUND
+    src: "audio/click.wav",
     volume: 0.7
   };
 
   let bgMusic = null;
   let fadeInterval = null;
-  let clickAudioPool = [];
+  let lastClickTime = 0;
 
   function initBackgroundMusic() {
     if (bgMusic) return bgMusic;
@@ -1519,8 +1695,12 @@ document.addEventListener("DOMContentLoaded", () => {
     return bgMusic;
   }
 
-  // Play click.mp3 tiap klik button / checkbox
+  // Play click.wav - FIXED: hanya 1 sound per click, anti double
   function playClickSound() {
+    const now = Date.now();
+    // Debounce 80ms biar tidak double
+    if (now - lastClickTime < 80) return;
+    lastClickTime = now;
     try {
       const audio = new Audio(CLICK_CONFIG.src);
       audio.volume = CLICK_CONFIG.volume;
@@ -1528,14 +1708,12 @@ document.addEventListener("DOMContentLoaded", () => {
     } catch(e) {}
   }
 
-  // Fade out volume pelan-pelan sampai 0 baru pause
   function fadeOutAndPause(audio, duration = 800) {
     if (!audio) return;
     clearInterval(fadeInterval);
     const steps = 20;
     const stepTime = duration / steps;
     const volumeStep = audio.volume / steps;
-
     fadeInterval = setInterval(() => {
       if (audio.volume > volumeStep) {
         audio.volume = Math.max(0, audio.volume - volumeStep);
@@ -1543,7 +1721,6 @@ document.addEventListener("DOMContentLoaded", () => {
         audio.volume = 0;
         audio.pause();
         clearInterval(fadeInterval);
-        // Reset volume ke config untuk play berikutnya
         audio.volume = MUSIC_CONFIG.volume;
       }
     }, stepTime);
@@ -1571,22 +1748,16 @@ document.addEventListener("DOMContentLoaded", () => {
     }).catch(()=>{});
   }
 
-  // === 1. AUTO EXECUTE music.mp3 LANGSUNG SAAT AWAL BUKA WEB ===
   const checkboxMusic = document.getElementById("checkbox-music");
-  // Init music langsung
   const music = initBackgroundMusic();
-  // Coba auto play langsung saat load
   if (checkboxMusic && checkboxMusic.checked) {
-    // Attempt autoplay immediately
     music.play().catch(() => {
       console.log("Autoplay blocked, waiting for user interaction");
     });
   }
 
-  // Backup: play on first user interaction if autoplay blocked
   const firstInteractionPlay = () => {
     if (checkboxMusic && checkboxMusic.checked && bgMusic && bgMusic.paused) {
-      // Kalau masih 0 volume karena fade out sebelumnya, reset dulu
       bgMusic.volume = MUSIC_CONFIG.volume;
       bgMusic.play().catch(()=>{});
     }
@@ -1598,26 +1769,21 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("keydown", firstInteractionPlay);
   document.addEventListener("touchstart", firstInteractionPlay);
 
-  // === 2. CHECKBOX ENABLE MUSIC - FADE OUT PELAN KE 0 BARU PAUSE ===
   if (checkboxMusic) {
     checkboxMusic.addEventListener("change", (e) => {
       const isChecked = e.target.checked;
       const music = initBackgroundMusic();
       clearInterval(fadeInterval);
       if (isChecked) {
-        // Fade in play
         if (music.paused) {
           music.volume = 0;
-          music.play().catch((err) => {
-            console.log("Music play blocked:", err);
-          }).then(() => {
+          music.play().catch(()=>{}).then(() => {
             fadeInAndPlay(music, 600);
           });
         } else {
           fadeInAndPlay(music, 400);
         }
       } else {
-        // Fade out pelan sampai 0 baru pause
         if (!music.paused) {
           fadeOutAndPause(music, 800);
         }
@@ -1625,37 +1791,31 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
-  // === 3. BUTTON & CHECKBOX CLICK -> PLAY audio/click.mp3 ===
-  function setupClickSounds() {
-    // Semua button
-    const allButtons = document.querySelectorAll("button");
-    allButtons.forEach(btn => {
-      // Jangan double listener untuk checkbox-music biar tidak bentrok
-      if (btn.id === "checkbox-music") return;
-      btn.addEventListener("click", () => {
+  // === FIXED CLICK SOUND: SINGLE DELEGATED LISTENER, NO DOUBLE ===
+  // Hapus semua listener lama yang bikin double, pakai 1 delegated listener di document
+  let clickSoundSetupDone = false;
+  function setupClickSoundsFixed() {
+    if (clickSoundSetupDone) return;
+    clickSoundSetupDone = true;
+    
+    document.addEventListener("click", (e) => {
+      const target = e.target;
+      // Cek apakah klik adalah button atau checkbox atau label checkbox
+      const isButton = target.closest("button");
+      const isCheckbox = target.closest('input[type="checkbox"]');
+      const isCheckboxLabel = target.closest(".checkbox-container");
+      const isCustomOption = target.closest(".custom-dropdown-option");
+      
+      // Hanya play untuk button, checkbox, custom dropdown option
+      // Kecuali untuk checkbox-music yang sudah punya logic sendiri? tetap play click tapi jangan double
+      if (isButton || isCheckbox || isCheckboxLabel || isCustomOption) {
+        // Jangan play untuk button yang adalah dropdown trigger? tetap play 1x
         playClickSound();
-      });
-    });
-
-    // Semua checkbox
-    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-    allCheckboxes.forEach(chk => {
-      chk.addEventListener("click", () => {
-        playClickSound();
-      });
-    });
+      }
+    }, true); // use capture biar hanya sekali
   }
+  setupClickSoundsFixed();
 
-  // Setup click sounds setelah DOM ready
-  setupClickSounds();
-
-  // Observer untuk button yang dibuat dinamis (seperti group cards, percentage modal)
-  const observer = new MutationObserver(() => {
-    setupClickSounds();
-  });
-  observer.observe(document.body, { childList: true, subtree: true });
-
-  // Pause music saat tab hidden, resume saat visible (jika checkbox masih checked)
   document.addEventListener("visibilitychange", () => {
     if (!checkboxMusic) return;
     if (!bgMusic) return;
